@@ -1,0 +1,73 @@
+import os
+quiche_code_path = os.environ['QUICHE_SRC_DIR']
+quiche_lib_path = os.path.join(quiche_code_path, 'build')
+quiche_build_inc_path=quiche_lib_path
+absl_inc_path= os.path.join(quiche_code_path, 'third_party', 'abseil-cpp')
+spdlog_inc_path=os.path.join(quiche_code_path, 'third_party', 'spdlog','include')
+boringssl_inc_path=os.path.join(quiche_code_path, 'third_party', 'boringssl','include')
+googleurl_inc_path=os.path.join(quiche_code_path, 'googleurl')
+def configure(conf):
+    conf.env.append_value('INCLUDES',[absl_inc_path,absl_inc_path,spdlog_inc_path])
+    conf.env.append_value("CXXFLAGS",[
+    "-std=c++14",
+    "-I" + quiche_code_path,
+    "-I" + quiche_build_inc_path,
+    "-I" +googleurl_inc_path,
+    "-I" +absl_inc_path,
+    "-I" +spdlog_inc_path,
+    "-I" +boringssl_inc_path,
+    "-Wno-unused-const-variable"])
+    conf.env.append_value("LINKFLAGS", [
+    "-L"+quiche_lib_path,
+    ])
+    conf.env.append_value("LINKFLAGS", ["-lquiche_shared", "-lprotobuf"])
+def build(bld):
+    module= bld.create_ns3_module('quic')
+    module.env.append_value("CXXFLAGS",[
+      "-D__STDC_CONSTANT_MACROS","-std=c++17"])
+    module.env.append_value("LIB", ["quiche_shared",'protobuf'])
+    module.source = [
+    'model/ns3-client-network-helper.cc',
+    'model/ns3-packet-writer.cc',
+    'model/ns3-quic-alarm-engine.cc',
+    'model/ns3-quic-backend.cc',
+    'model/ns3-quic-channel.cc',
+    'model/ns3-quic-client.cc',
+    'model/ns3-quic-client-app.cc',
+    'model/ns3-quic-client-session.cc',
+    'model/ns3-quic-clock.cc',
+    'model/ns3-quic-connection-helper.cc',
+    'model/ns3-quic-dispatcher.cc',
+    'model/ns3-quic-flags.cc',
+    'model/ns3-quic-server.cc',
+    'model/ns3-quic-server-app.cc',
+    'model/ns3-quic-server-session.cc',
+    'model/ns3-quic-session-base.cc',
+    'model/ns3-quic-tag.cc',
+    'model/ns3-quic-util.cc',
+    'model/ns3-transport-stream.cc',
+    'model/quic-test.cc',
+    ]
+    headers = bld(features='ns3header')
+    headers.module = 'quic'
+    headers.source = [
+    'model/ns3-client-network-helper.h',
+    'model/ns3-packet-writer.h',
+    'model/ns3-quic-alarm-engine.h',
+    'model/ns3-quic-backend.h',
+    'model/ns3-quic-channel.h',
+    'model/ns3-quic-clock.h',
+    'model/ns3-quic-client.h',
+    'model/ns3-quic-client-app.h',
+    'model/ns3-quic-server.h',
+    'model/ns3-quic-server-app.h',
+    'model/ns3-quic-session-base.h',
+    'model/ns3-quic-poll-server.h',
+    'model/ns3-quic-util.h',
+    'model/ns3-transport-stream.h',
+    'model/quic-test.h',
+    ]
+    module.env['INCLUDES'] += [
+    '.',
+    'model',
+    ]
