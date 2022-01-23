@@ -35,10 +35,10 @@ Ns3QuicBackendBase *backend):
 Ns3QuicSessionBase(connection_ptr.get(),owner,config,supported_versions,0),
 backend_(backend),
 connection_own_(std::move(connection_ptr)){
-    for (const ParsedQuicVersion& version : supported_versions){
-        //QUIC_BUG_IF(Ns3QuicServerSession,version.handshake_protocol != PROTOCOL_TLS1_3)
-        //<< "QuicTransport requires TLS 1.3 handshake";
-    }
+    /*for (const ParsedQuicVersion& version : supported_versions){
+        QUIC_BUG_IF(Ns3QuicServerSession,version.handshake_protocol != PROTOCOL_TLS1_3)
+        << "QuicTransport requires TLS 1.3 handshake";
+    }*/
     static Ns3QuicTransportServerCryptoHelper* helper =new Ns3QuicTransportServerCryptoHelper();
     crypto_stream_ = CreateCryptoServerStream(
                     crypto_config, compressed_certs_cache,this, helper);

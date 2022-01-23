@@ -2,8 +2,9 @@
 #include <limits>
 #include <vector>
 
-#include "gquiche/quic/core/quic_arena_scoped_ptr.h"
 #include "gquiche/quic/platform/api/quic_logging.h"
+#include "gquiche/quic/core/quic_arena_scoped_ptr.h"
+
 
 #include "ns3/simulator.h"
 #include "ns3/log.h"
@@ -12,16 +13,7 @@
 using namespace ns3;
 NS_LOG_COMPONENT_DEFINE("Ns3QuicAlarmEngine");
 namespace quic{
-static std::string RoleToString(Ns3QuicAlarmEngine::Role role) {
-  switch (role) {
-    case Ns3QuicAlarmEngine::Role::CLIENT:
-      return "engine_client";
-    case Ns3QuicAlarmEngine::Role::SERVER:
-      return "engien_server";
-  }
-  return "???";
-}
-Ns3QuicAlarmEngine::Ns3QuicAlarmEngine(Role role):
+Ns3QuicAlarmEngine::Ns3QuicAlarmEngine(Perspective role):
 role_(role),
 visitor_(nullptr){}
 Ns3QuicAlarmEngine::~Ns3QuicAlarmEngine(){
@@ -58,9 +50,9 @@ void Ns3QuicAlarmEngine::RegisterAlarm(int64_t timeout_us,AlarmCB* ac){
         auto alarm_iter = alarm_map_.insert(std::make_pair(timeout_us, ac));
         all_alarms_.insert(ac);
         ac->OnRegistration(alarm_iter,this);
-        if(update){
-            UpdateTimer();
-        }
+    }
+    if(update){
+        UpdateTimer();
     }
 
 }
@@ -73,11 +65,12 @@ void Ns3QuicAlarmEngine::UnregisterAlarm(const AlarmRegToken & iterator_token){
 Ns3QuicAlarmEngine::AlarmRegToken Ns3QuicAlarmEngine::ReregisterAlarm(AlarmRegToken &iterator_token, int64_t timeout_us){
   AlarmCB* cb = iterator_token->second;
   alarm_map_.erase(iterator_token);
+  NS_ASSERT(!alarm_map_.empty());
   auto i=alarm_map_.begin();
   int64_t next_timeout_us=i->first;
   auto ret=alarm_map_.emplace(timeout_us, cb);
   if(timeout_us<next_timeout_us){
-      UpdateTimer();
+       UpdateTimer();
   }
   return  ret;
 }
@@ -85,7 +78,7 @@ void Ns3QuicAlarmEngine::UpdateTimer(){
     if(timer_.IsRunning()){
          timer_.Cancel();
     }
-    NS_ASSERT(!alarm_map_.empty());
+    if(alarm_map_.empty()){ return ;}
     auto i=alarm_map_.begin();
     ns3::Time now=ns3::Simulator::Now();
     ns3::Time future=ns3::MicroSeconds(i->first);
@@ -94,7 +87,8 @@ void Ns3QuicAlarmEngine::UpdateTimer(){
     timer_=ns3::Simulator::Schedule(next,&Ns3QuicAlarmEngine::OnTimeout,this);
 }
 void Ns3QuicAlarmEngine::OnTimeout(){
-    int64_t now_us=ns3::Simulator::Now().GetMicroSeconds();
+    ns3::Time now=ns3::Simulator::Now();
+    int64_t now_us=now.GetMicroSeconds();
     TimeToAlarmCBMap::iterator erase_it;
     std::vector<AlarmCB*> cbs;
     bool has_event=false;
@@ -120,6 +114,7 @@ void Ns3QuicAlarmEngine::OnTimeout(){
     if(has_event&&visitor_){
         visitor_->PostProcessing();
     }
+    UpdateTimer();
 }
 BaseAlarm::BaseAlarm() : engine_(NULL), registered_(false) {}
 
@@ -169,8 +164,8 @@ public:
 protected:
     void SetImpl() override {
         QUICHE_DCHECK(deadline().IsInitialized());
-    engine_->RegisterAlarm(
-        (deadline() - QuicTime::Zero()).ToMicroseconds(), &ns3_alarm_impl_);
+        int64_t timeout_us=(deadline() - QuicTime::Zero()).ToMicroseconds();
+        engine_->RegisterAlarm(timeout_us, &ns3_alarm_impl_);
     }
     
     void CancelImpl() override {
@@ -180,11 +175,11 @@ protected:
 
   void UpdateImpl() override {
     QUICHE_DCHECK(deadline().IsInitialized());
-    int64_t epoll_deadline = (deadline() - QuicTime::Zero()).ToMicroseconds();
+    int64_t timeout_us = (deadline() - QuicTime::Zero()).ToMicroseconds();
     if (ns3_alarm_impl_.registered()) {
-      ns3_alarm_impl_.ReregisterAlarm(epoll_deadline);
+      ns3_alarm_impl_.ReregisterAlarm(timeout_us);
     } else {
-      engine_->RegisterAlarm(epoll_deadline, &ns3_alarm_impl_);
+      engine_->RegisterAlarm(timeout_us, &ns3_alarm_impl_);
     }
   }
 
@@ -193,7 +188,7 @@ private:
    public:
 
     explicit Ns3AlarmImpl(Ns3Alarm* alarm) : alarm_(alarm) {}
-
+    void *alarm_addr() override {return alarm_;}
     // Use the same integer type as the base class.
     int64_t OnAlarm() override {
       BaseAlarm::OnAlarm();

@@ -8,11 +8,11 @@
 #include "gquiche/quic/core/quic_alarm.h"
 #include "gquiche/quic/core/quic_alarm_factory.h"
 #include "gquiche/quic/core/quic_one_block_arena.h"
+#include "gquiche/quic/core/quic_types.h"
 namespace quic{
 class AlarmCallbackInterface;
 class Ns3QuicAlarmEngine:public ns3::Object{
 public:
-    enum class Role{CLIENT,SERVER};
     typedef AlarmCallbackInterface AlarmCB;
     typedef std::multimap<int64_t, AlarmCB*> TimeToAlarmCBMap;
     typedef TimeToAlarmCBMap::iterator AlarmRegToken;
@@ -22,7 +22,7 @@ public:
         virtual void PostProcessing()=0;
     };
 
-    Ns3QuicAlarmEngine(Role role=Role::CLIENT);
+    Ns3QuicAlarmEngine(Perspective role=Perspective::IS_CLIENT);
     ~Ns3QuicAlarmEngine();
     void Shutdown();
     void set_visitor(Visitor *visitor){visitor_=visitor;}
@@ -38,7 +38,7 @@ private:
     };
     void UpdateTimer();
     void OnTimeout();
-    Role role_;
+    Perspective role_;
     using AlarmCBMap = std::unordered_set<AlarmCB*, AlarmCBHash>;
     AlarmCBMap all_alarms_;
     TimeToAlarmCBMap alarm_map_;
@@ -55,6 +55,7 @@ public:
     virtual void OnRegistration(const Ns3QuicAlarmEngine::AlarmRegToken &token,Ns3QuicAlarmEngine *engine)=0;
     virtual void OnUnregistration()=0;
     virtual void OnShutdown(Ns3QuicAlarmEngine *engine)=0;
+    virtual void* alarm_addr()=0;
 };
 class BaseAlarm:public AlarmCallbackInterface{
 public:
@@ -89,7 +90,7 @@ private:
     Ns3QuicAlarmEngine* engine_;
     bool registered_;
 };
-class Ns3AlarmFactory:public  QuicAlarmFactory{
+class Ns3AlarmFactory:public QuicAlarmFactory{
 public:
     Ns3AlarmFactory(Ns3QuicAlarmEngine *engine);
     ~Ns3AlarmFactory();

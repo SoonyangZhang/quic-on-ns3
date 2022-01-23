@@ -1,6 +1,8 @@
 #pragma once
 #include <memory>
+#include "gquiche/quic/core/quic_types.h"
 #include "gquiche/quic/tools/quic_client_base.h"
+#include "gquiche/quic/core/quic_bandwidth.h"
 namespace quic{
 class Ns3QuicBackendBase;
 class Ns3QuicPollServer;
@@ -15,7 +17,8 @@ public:
                 std::unique_ptr<ProofVerifier> proof_verifier,
                 Ns3QuicAlarmEngine *engine,
                 Ns3QuicBackendBase *backend,
-                Ns3QuicPollServer *poller);
+                Ns3QuicPollServer *poller,
+                CongestionControlType cc_type);
     Ns3QuicClient(QuicSession::Visitor *owner,
                 QuicSocketAddress server_address,
                 const QuicServerId& server_id,
@@ -25,10 +28,17 @@ public:
                 std::unique_ptr<SessionCache> session_cache,
                 Ns3QuicAlarmEngine *engine,
                 Ns3QuicBackendBase *backend,
-                Ns3QuicPollServer *poller);
+                Ns3QuicPollServer *poller,
+                CongestionControlType cc_type);
     ~Ns3QuicClient() override;
     void AsynConnect();
     Ns3QuicClientSession* client_session();
+    bool GetBandwidth(QuicBandwidth &bandwidth) const;
+    bool GetCongestionWindowBytes(QuicByteCount &bytes) const;
+    bool GetCongestionWindowPackets(int &packets) const;
+    bool GetInFlightBytes(QuicByteCount& bytes) const;
+    bool GetInFlightPackets(int & packets) const;
+    std::string GetCongestionTypeString() const;
 protected:
     //from QuicClientBase
     // Takes ownership of |connection|.
@@ -51,5 +61,6 @@ protected:
 private:
     Ns3QuicBackendBase *backend_=nullptr;
     QuicSession::Visitor *owner_=nullptr;
+    CongestionControlType cc_type_;
 };
 }

@@ -29,7 +29,7 @@ mv ./out/*  data/quic-cert/
 ```
 # Build quic module on ns3  
 The code of quic module is tested on ns3.33.  
-## Add environmental vairible
+## Add environmental variable
 ```
 sudo gedit /etc/profile  
 export QUICHE_SRC_DIR=/home/xxx/quiche/  
@@ -44,14 +44,43 @@ source /etc/profile
 ./waf configure  
 ./waf build  
 ```
-## Run example 
+# Run example 
 1 put the file quic-main.cc(scratch) to ns3.33/scratch/  
 2 set string varible quic_cert_path in quic-main.cc  
+3 set string varible log_path in quic-main.cc to collect traced data.  
 ```
-std::string quic_cert_path("/home/xxx/quiche/utils/data/quic-cert/");
+std::string quic_cert_path("/home/xxx/quiche/utils/data/quic-cert/");  
+std::string log_path=std::string("/home/xxx/traces/")+algo+"/";  
 ```
-3 Run example  
+3 Run example(BBR)  
 ```
 source /etc/profile  
-./waf --run "scratch/quic-main"  
+./waf --run "scratch/quic-main --cc=bbr"  
 ```
+3 Run example(BBR)  
+```
+source /etc/profile  
+./waf --run "scratch/quic-main --cc=cubic"  
+```
+#Results  
+data can be found under folder ("/home/xxx/traces/")  
+copy the file plot-script/data_plot.sh to "/home/xxx/traces/bbr"  
+plot the results:  
+```
+chmod 777  data_plot.sh  
+./data_plot.sh  
+```
+## bbr  
+inflight packets:  
+![avatar](https://github.com/SoonyangZhang/quic-on-ns3/blob/main/results/1-bbr-inflight.png)  
+one way delay:  
+![avatar](https://github.com/SoonyangZhang/quic-on-ns3/blob/main/results/1-bbr-owd.png)  
+send rate:  
+![avatar](https://github.com/SoonyangZhang/quic-on-ns3/blob/main/results/1-bbr-send-rate.png)  
+## cubic  
+inflight packets:  
+![avatar](https://github.com/SoonyangZhang/quic-on-ns3/blob/main/results/1-cubic-inflight.png)  
+one way delay:  
+![avatar](https://github.com/SoonyangZhang/quic-on-ns3/blob/main/results/1-cubic-owd.png)  
+send rate:  
+![avatar](https://github.com/SoonyangZhang/quic-on-ns3/blob/main/results/1-cubic-send-rate.png)  

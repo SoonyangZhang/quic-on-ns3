@@ -18,7 +18,8 @@ class QuicClientApp:public Application,public quic::Ns3QuicPollServer,
 public quic::Ns3PacketWriter::Delegate,
 public quic::QuicSession::Visitor{
 public:
-    QuicClientApp();
+    QuicClientApp(quic::BackendType backend_type=quic::BackendType::HELLO_UNIDI,
+                  quic::CongestionControlType cc_type=quic::kCubicBytes);
     ~QuicClientApp() override;
     void Bind(uint16_t port=0);
     void set_peer(const Ipv4Address& ip_addr,uint16_t port);
@@ -61,12 +62,19 @@ public:
 
     // Called when a ConnectionId has been retired.
     void OnConnectionIdRetired(const quic::QuicConnectionId& server_connection_id) override;
+    
+    typedef Callback<void,float> TraceRate;
+    typedef Callback<void,int> TraceOneIntValue;
+    void SetRateTraceFuc(TraceRate cb);
+    void SetCwndTraceFun(TraceOneIntValue cb);
+    void SetInFlightTraceFun(TraceOneIntValue cb);
 private:
     void InitialAndConnect();
     void RecvPacket(Ptr<Socket> socket);
     void SendToNetwork(Ptr<Packet> p,const InetSocketAddress& dest);
     virtual void StartApplication() override;
     virtual void StopApplication() override;
+    quic::CongestionControlType m_ccType;
     quic::Ns3PacketInCallback *m_packetProcessor=nullptr;
     Ptr<Socket> m_socket;
     Ipv4Address m_bindIp;
@@ -74,10 +82,16 @@ private:
     Ipv4Address m_peerIp;
     uint16_t m_peerPort;
     std::unique_ptr<quic::Ns3QuicClient> m_quicClient;
-    std::unique_ptr<quic::HelloClientBackend> m_backend;
+    std::unique_ptr<quic::Ns3QuicBackendBase> m_backend;
     std::unique_ptr<quic::Ns3QuicAlarmEngine> m_engine;
     quic::QuicClock *m_clock=nullptr;
     bool m_running=false;
     uint64_t m_seq=1;
+    TraceRate m_traceRate;
+    TraceOneIntValue m_traceCwnd;
+    TraceOneIntValue m_traceInFlight;
+    quic::QuicBandwidth m_rate=quic::QuicBandwidth::Zero();
+    int m_cwnd=0;
+    int m_inFlight=0;
 };
 }

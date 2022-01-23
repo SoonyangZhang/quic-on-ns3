@@ -13,12 +13,12 @@ Ns3QuicBackendBase *backend)
 :Ns3QuicSessionBase(connection_ptr.get(),owner,config,supported_versions,0),
 backend_(backend),
 connection_own_(std::move(connection_ptr)){
-    for (const ParsedQuicVersion& version : supported_versions) {
-        //QUIC_BUG_IF(Ns3QuicClientSession,version.handshake_protocol != PROTOCOL_TLS1_3)
-        //    << "QuicTransport requires TLS 1.3 handshake";
-    }
-    std::cout<<"max uni: "<<config.GetMaxUnidirectionalStreamsToSend()<<std::endl;
-    std::cout<<"max bi: "<<config.GetMaxBidirectionalStreamsToSend()<<std::endl;
+    /*for (const ParsedQuicVersion& version : supported_versions) {
+        QUIC_BUG_IF(Ns3QuicClientSession,version.handshake_protocol != PROTOCOL_TLS1_3)
+            << "QuicTransport requires TLS 1.3 handshake";
+    }*/
+    //std::cout<<"max uni: "<<config.GetMaxUnidirectionalStreamsToSend()<<std::endl;
+    //std::cout<<"max bi: "<<config.GetMaxBidirectionalStreamsToSend()<<std::endl;
     crypto_stream_ = std::make_unique<QuicCryptoClientStream>(
     server_id, this,crypto_config->proof_verifier()->CreateDefaultContext(),
     crypto_config,/*proof_handler=*/this, /*has_application_state = */ true);
