@@ -12,7 +12,7 @@ gnuplot<<!
 set xlabel "time/s" 
 set ylabel "rate/kbps"
 set xrange [0:200]
-set yrange [0:4500]
+set yrange [0:4000]
 set term "png"
 set output "${output}-send-rate.png"
 plot "${file1}" u 1:2 title "flow1" with lines lw 2 lc 1,\
@@ -21,7 +21,23 @@ plot "${file1}" u 1:2 title "flow1" with lines lw 2 lc 1,\
 set output
 exit
 !
-
+file1=${prefix1}_goodput.txt
+file2=${prefix2}_goodput.txt
+file3=${prefix3}_goodput.txt
+output=${id}-${algo}
+gnuplot<<!
+set xlabel "time/s" 
+set ylabel "rate/kbps"
+set xrange [0:200]
+set yrange [0:4000]
+set term "png"
+set output "${output}-goodput.png"
+plot "${file1}" u 1:2 title "flow1" with lines lw 2 lc 1,\
+"${file2}" u 1:2 title "flow2" with lines lw 2 lc 2,\
+"${file3}" u 1:2 title "flow3" with lines lw 2 lc 3
+set output
+exit
+!
 file1=${prefix1}_inflight.txt
 file2=${prefix2}_inflight.txt
 file3=${prefix3}_inflight.txt

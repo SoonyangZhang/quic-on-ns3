@@ -92,7 +92,8 @@ void test_app(Time app_start,Time app_stop,uint8_t client_log_flag,
     std::vector<Ns3QuicClientTrace*> client_traces;
     Ns3QuicServerTraceDispatcher *server_trace=nullptr;
     if(server_log_flag&E_QS_ALL){
-        server_trace=new Ns3QuicServerTraceDispatcher();
+        DataRate bottleneck_bw(bps);
+        server_trace=new Ns3QuicServerTraceDispatcher(bottleneck_bw,app_start);
         server_trace->LogEnable(topo_id,server_log_flag);
         server_app->set_trace(server_trace);
     }
@@ -211,7 +212,7 @@ int main(int argc, char* argv[]){
     //BANDWIDTH
     quic::BackendType type=quic::BackendType::BANDWIDTH;
     uint8_t client_log_flag=E_QC_IN_FLIGHT|E_QC_SEND_RATE;
-    uint8_t server_log_flag=E_QS_OWD;
+    uint8_t server_log_flag=E_QS_OWD|E_QS_LOST|E_QS_GOODPUT;
     test_app(Seconds(0.001),Seconds(200),client_log_flag,server_log_flag,type,cc_type);
     return 0;
 }
