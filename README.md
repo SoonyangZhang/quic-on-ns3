@@ -37,7 +37,13 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$QUICHE_SRC_DIR/build/
 ```
 The reason to add QUICHE_SRC_DIR can be found quic/wscript.  
 ## build ns3  
-1 cope quic folder to ns3.33/src/  
+1 enble c++17 flag (ns3.33/wscript)
+```
+opt.add_option('--cxx-standard',  
+               help=('Compile NS-3 with the given C++ standard'),  
+               type='string', default='-std=c++17', dest='cxx_standard')  
+```
+2 cope quic folder to ns3.33/src/  
 ```
 cd ns3.33  
 source /etc/profile  
@@ -62,7 +68,7 @@ source /etc/profile
 source /etc/profile  
 ./waf --run "scratch/quic-main --cc=cubic"  
 ```
-#Results  
+# Results  
 data can be found under folder ("/home/xxx/traces/")  
 copy the file plot-script/data_plot.sh to "/home/xxx/traces/bbr"  
 plot the results:  
