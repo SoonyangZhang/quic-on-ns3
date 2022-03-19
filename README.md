@@ -9,7 +9,8 @@ auth code: 2jhd
 # Build quiche   
 ## Prerequisite  
 ```
-apt-get install cmake build-essential protobuf-compiler libprotobuf-dev golang-go libunwind-dev libicu-dev  
+apt-get install cmake build-essential protobuf-compiler libprotobuf-dev golang-go libunwind-dev libicu-dev
+git submodule update --init
 ```
 ## Build  
 Download quiche library first. And I unzip the quiche.zip under "/home/xxx/"  
@@ -22,7 +23,7 @@ make
 ## Generate cert  
 ```
 cd quiche/util  
-chmod 777 /generate-certs.sh  
+chmod 777 generate-certs.sh  
 ./generate-certs.sh   
 mkdir -p data/quic-cert  
 mv ./out/*  data/quic-cert/  
@@ -73,7 +74,7 @@ data can be found under folder ("/home/xxx/traces/")
 copy the file plot-script/data_plot.sh to "/home/xxx/traces/bbr"  
 plot the results:  
 ```
-chmod 777  data_plot.sh  
+chmod 777 data_plot.sh  
 ./data_plot.sh  
 ```
 ## bbr  
