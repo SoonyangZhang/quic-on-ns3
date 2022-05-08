@@ -1,4 +1,5 @@
 #include <iostream>
+#include <string>
 #include <limits>
 #include <vector>
 
@@ -12,6 +13,7 @@
 #include "ns3-quic-alarm-engine.h"
 using namespace ns3;
 NS_LOG_COMPONENT_DEFINE("Ns3QuicAlarmEngine");
+#define MOD_DEBUG 1
 namespace quic{
 Ns3QuicAlarmEngine::Ns3QuicAlarmEngine(Perspective role):
 role_(role),
@@ -34,7 +36,10 @@ void Ns3QuicAlarmEngine::RegisterAlarm(int64_t timeout_us,AlarmCB* ac){
     bool update=false;
     ns3::Time now=ns3::Simulator::Now();
     int64_t now_us=now.GetMicroSeconds();
-    if(timeout_us<=now_us){
+    if(timeout_us<now_us){
+    #if (MOD_DEBUG)
+        NS_LOG_FUNCTION(now_us<<timeout_us);
+    #endif
         timeout_us=now_us;
     }
     if(alarm_map_.empty()){
@@ -51,7 +56,7 @@ void Ns3QuicAlarmEngine::RegisterAlarm(int64_t timeout_us,AlarmCB* ac){
         all_alarms_.insert(ac);
         ac->OnRegistration(alarm_iter,this);
     }
-    if(update){
+    if((!timer_.IsRunning())||update){
         UpdateTimer();
     }
 
@@ -63,15 +68,24 @@ void Ns3QuicAlarmEngine::UnregisterAlarm(const AlarmRegToken & iterator_token){
     cb->OnUnregistration();
 }
 Ns3QuicAlarmEngine::AlarmRegToken Ns3QuicAlarmEngine::ReregisterAlarm(AlarmRegToken &iterator_token, int64_t timeout_us){
+  int64_t now_us=ns3::Simulator::Now().GetMicroSeconds();
   AlarmCB* cb = iterator_token->second;
+  int64_t last_us=iterator_token->first;
   alarm_map_.erase(iterator_token);
   NS_ASSERT(!alarm_map_.empty());
   auto i=alarm_map_.begin();
   int64_t next_timeout_us=i->first;
+  #if (MOD_DEBUG)
+  if(timeout_us<=now_us){
+      NS_LOG_FUNCTION(now_us<<timeout_us<<next_timeout_us<<last_us);
+  }
+  #endif
   auto ret=alarm_map_.emplace(timeout_us, cb);
-  if(timeout_us<next_timeout_us){
+  if((!timer_.IsRunning())||(timeout_us<next_timeout_us)){
        UpdateTimer();
   }
+  NS_ASSERT_MSG(timer_.IsRunning(),now_us<<":"<<timeout_us
+                <<":"<<next_timeout_us<<":"<<alarm_map_.size());
   return  ret;
 }
 void Ns3QuicAlarmEngine::UpdateTimer(){
@@ -80,10 +94,10 @@ void Ns3QuicAlarmEngine::UpdateTimer(){
     }
     if(alarm_map_.empty()){ return ;}
     auto i=alarm_map_.begin();
-    ns3::Time now=ns3::Simulator::Now();
-    ns3::Time future=ns3::MicroSeconds(i->first);
-    NS_ASSERT(future>=now);
-    ns3::Time next=future-now;
+    int64_t now_us=ns3::Simulator::Now().GetMicroSeconds();
+    int64_t future_us=i->first;
+    NS_ASSERT_MSG(future_us>=now_us,now_us<<":"<<future_us<<":"<<alarm_map_.size());
+    ns3::Time next=ns3::MicroSeconds(future_us-now_us);
     timer_=ns3::Simulator::Schedule(next,&Ns3QuicAlarmEngine::OnTimeout,this);
 }
 void Ns3QuicAlarmEngine::OnTimeout(){
@@ -92,6 +106,7 @@ void Ns3QuicAlarmEngine::OnTimeout(){
     TimeToAlarmCBMap::iterator erase_it;
     std::vector<AlarmCB*> cbs;
     bool has_event=false;
+    int64_t next_timeout_us=0;
     for(auto i=alarm_map_.begin();i!=alarm_map_.end();){
         if(i->first>now_us){
             break;
@@ -106,7 +121,16 @@ void Ns3QuicAlarmEngine::OnTimeout(){
     }
     for(auto it=cbs.begin();it!=cbs.end();it++){
         AlarmCB *cb=(*it);
-        int64_t next_timeout_us=cb->OnAlarm();
+        int c=0;
+        do{
+            next_timeout_us=cb->OnAlarm();
+            c++;
+            #if (MOD_DEBUG)
+            if((next_timeout_us>0)&&(next_timeout_us<=now_us)){
+                NS_LOG_FUNCTION(now_us<<next_timeout_us<<c);
+            }
+            #endif
+        }while((next_timeout_us>0)&&(next_timeout_us<=now_us));
         if(next_timeout_us>0){
             RegisterAlarm(next_timeout_us,cb);
         }

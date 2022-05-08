@@ -63,7 +63,7 @@ void test_arg_config(int argc, char* argv[]){
 }
 void test_app(Time app_start,Time app_stop,uint8_t client_log_flag,
                 uint8_t server_log_flag,quic::BackendType type,const std::string &cc_name){
-    uint64_t bps=4000000;
+    uint64_t bps=5000000;
     uint32_t link_delay=100;//milliseconds;
     uint32_t buffer_delay=300;//ms
     std::string topo_id("1");
@@ -194,10 +194,11 @@ void test_app(Time app_start,Time app_stop,uint8_t client_log_flag,
     std::cout<<"run time ms: "<<delta<<std::endl;
 }
 int main(int argc, char* argv[]){
+    LogComponentEnable("Ns3QuicBackendBase",LOG_LEVEL_ALL);
+    LogComponentEnable("Ns3QuicAlarmEngine",LOG_LEVEL_ALL);
+    //LogComponentEnable("Ns3QuicChannelBase",LOG_LEVEL_ALL);
     //LogComponentEnable("QuicClientApp",LOG_LEVEL_ALL);
     //LogComponentEnable("QuicServerApp",LOG_LEVEL_ALL);
-    LogComponentEnable("Ns3QuicBackendBase",LOG_LEVEL_ALL);
-    //LogComponentEnable("Ns3QuicChannelBase",LOG_LEVEL_ALL);
     std::string cc_type("cubic");
     CommandLine cmd;
     cmd.AddValue ("cc", "cctype",cc_type);
@@ -213,6 +214,7 @@ int main(int argc, char* argv[]){
     quic::BackendType type=quic::BackendType::BANDWIDTH;
     uint8_t client_log_flag=E_QC_IN_FLIGHT|E_QC_SEND_RATE;
     uint8_t server_log_flag=E_QS_OWD|E_QS_LOST|E_QS_GOODPUT;
+    //RegisterExternalCongestionFactory();
     test_app(Seconds(0.001),Seconds(200),client_log_flag,server_log_flag,type,cc_type);
     return 0;
 }
