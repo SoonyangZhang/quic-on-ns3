@@ -52,13 +52,7 @@ source /etc/profile
 ```
 # Run example 
 1 put the file quic-main.cc(scratch) to ns3.33/scratch/  
-2 set string varible quic_cert_path in quic-main.cc  
-3 set string varible log_path in quic-main.cc to collect traced data.  
-```
-std::string quic_cert_path("/home/xxx/quiche/utils/data/quic-cert/");  
-std::string log_path=std::string("/home/xxx/traces/")+algo+"/";  
-```
-3 Run example(BBR)  
+2 Run example(BBR)  
 ```
 source /etc/profile  
 ./waf --run "scratch/quic-main --cc=bbr"  
@@ -73,8 +67,8 @@ data can be found under folder ("/home/xxx/traces/")
 copy the file plot-script/data_plot.sh to "/home/xxx/traces/bbr"  
 plot the results:  
 ```
-chmod 777  data_plot.sh  
-./data_plot.sh  
+chmod 777  data-plot.sh  
+./data-plot.sh  
 ```
 ## bbr  
 inflight packets:  
@@ -95,3 +89,8 @@ one way delay:
 ![avatar](https://github.com/SoonyangZhang/quic-on-ns3/blob/main/results/1-copa-owd.png)  
 goodput:  
 ![avatar](https://github.com/SoonyangZhang/quic-on-ns3/blob/main/results/1-copa-goodput.png)  
+## vegas
+one way delay:  
+![avatar](https://github.com/SoonyangZhang/quic-on-ns3/blob/main/results/1-vegas-owd.png)  
+goodput:  
+![avatar](https://github.com/SoonyangZhang/quic-on-ns3/blob/main/results/1-vegas-goodput.png)  

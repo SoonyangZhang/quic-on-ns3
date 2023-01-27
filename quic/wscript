@@ -28,6 +28,7 @@ def build(bld):
     module.env.append_value("LIB", ["quiche_shared",'protobuf'])
     module.source = [
     'model/cc-algo/copa_sender.cc',
+    'model/cc-algo/vegas_sender.cc',
     'model/ns3-client-network-helper.cc',
     'model/ns3-packet-writer.cc',
     'model/ns3-quic-alarm-engine.cc',

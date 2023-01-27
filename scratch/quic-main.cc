@@ -89,6 +89,9 @@ void test_app(Time app_start,Time app_stop,uint8_t client_log_flag,
     }else if(0==cc_name.compare("copa")){
         cc_type=static_cast<quic::CongestionControlType>(quic::kCopa);
         algo=cc_name;
+    }else if(0==cc_name.compare("vegas")){
+        cc_type=static_cast<quic::CongestionControlType>(quic::kVegas);
+        algo=cc_name;
     }
 
     std::string log_path=trace_folder+cc_name+"/";

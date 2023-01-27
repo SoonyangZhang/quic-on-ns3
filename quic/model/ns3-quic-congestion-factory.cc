@@ -5,6 +5,7 @@
 #include "ns3-quic-congestion-factory.h"
 #include "ns3-quic-no-destructor.h"
 #include "cc-algo/copa_sender.h"
+#include "cc-algo/vegas_sender.h"
 namespace quic{
 class Ns3QuicCongestionFactory:public AbstractCongestionFactory{
 public:
@@ -48,6 +49,10 @@ SendAlgorithmInterface* Ns3QuicCongestionFactory::Create(
           initial_congestion_window, max_congestion_window, stats);
     }else if(kCopa==v){
         algo=new CopaSender(clock->ApproximateNow(), rtt_stats, unacked_packets,
+                           initial_congestion_window, max_congestion_window,
+                           random, stats);
+    }else if(kVegas==v){
+        algo=new VegasSender(clock->ApproximateNow(), rtt_stats, unacked_packets,
                            initial_congestion_window, max_congestion_window,
                            random, stats);
     }else{
