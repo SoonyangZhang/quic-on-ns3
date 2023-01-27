@@ -22,7 +22,7 @@ make
 ## Generate cert  
 ```
 cd quiche/util  
-chmod 777 /generate-certs.sh  
+chmod 777 generate-certs.sh  
 ./generate-certs.sh   
 mkdir -p data/quic-cert  
 mv ./out/*  data/quic-cert/  
@@ -90,3 +90,8 @@ one way delay:
 ![avatar](https://github.com/SoonyangZhang/quic-on-ns3/blob/main/results/1-cubic-owd.png)  
 send rate:  
 ![avatar](https://github.com/SoonyangZhang/quic-on-ns3/blob/main/results/1-cubic-send-rate.png)  
+## copa
+one way delay:  
+![avatar](https://github.com/SoonyangZhang/quic-on-ns3/blob/main/results/1-copa-owd.png)  
+goodput:  
+![avatar](https://github.com/SoonyangZhang/quic-on-ns3/blob/main/results/1-copa-goodput.png)  

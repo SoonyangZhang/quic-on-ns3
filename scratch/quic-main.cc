@@ -63,6 +63,20 @@ void test_arg_config(int argc, char* argv[]){
 }
 void test_app(Time app_start,Time app_stop,uint8_t client_log_flag,
                 uint8_t server_log_flag,quic::BackendType type,const std::string &cc_name){
+    char buffer[128] = {0};
+    if (getcwd(buffer,sizeof(buffer)) != buffer) {
+        NS_LOG_ERROR("path error");
+        return ;
+    }
+    std::string ns3_path(buffer,::strlen(buffer));
+    if ('/'!=ns3_path.back()){
+        ns3_path.push_back('/');
+    }
+    std::string trace_folder=ns3_path+"traces/";
+    if(!MakePath(trace_folder)){
+        std::cout<<trace_folder<<" is not right"<<std::endl;
+        return ;
+    }
     uint64_t bps=5000000;
     uint32_t link_delay=100;//milliseconds;
     uint32_t buffer_delay=300;//ms
@@ -72,8 +86,12 @@ void test_app(Time app_start,Time app_stop,uint8_t client_log_flag,
     if(0==cc_name.compare("bbr")){
         cc_type=quic::kBBR;
         algo=cc_name;
+    }else if(0==cc_name.compare("copa")){
+        cc_type=static_cast<quic::CongestionControlType>(quic::kCopa);
+        algo=cc_name;
     }
-    std::string log_path=std::string("/home/ipcom/zsy/traces/")+algo+"/";
+
+    std::string log_path=trace_folder+cc_name+"/";
     set_quic_trace_folder(log_path);
     if(!MakePath(log_path)){
         std::cout<<log_path<<" is not right"<<std::endl;
@@ -194,8 +212,8 @@ void test_app(Time app_start,Time app_stop,uint8_t client_log_flag,
     std::cout<<"run time ms: "<<delta<<std::endl;
 }
 int main(int argc, char* argv[]){
-    LogComponentEnable("Ns3QuicBackendBase",LOG_LEVEL_ALL);
-    LogComponentEnable("Ns3QuicAlarmEngine",LOG_LEVEL_ALL);
+    //LogComponentEnable("Ns3QuicBackendBase",LOG_LEVEL_ALL);
+    //LogComponentEnable("Ns3QuicAlarmEngine",LOG_LEVEL_ALL);
     //LogComponentEnable("Ns3QuicChannelBase",LOG_LEVEL_ALL);
     //LogComponentEnable("QuicClientApp",LOG_LEVEL_ALL);
     //LogComponentEnable("QuicServerApp",LOG_LEVEL_ALL);
@@ -203,18 +221,24 @@ int main(int argc, char* argv[]){
     CommandLine cmd;
     cmd.AddValue ("cc", "cctype",cc_type);
     cmd.Parse (argc, argv);
-    
+    const char *envKey="QUICHE_SRC_DIR";
+    char *envValue=getenv(envKey);
+    if(envValue){
+        std::cout<<envValue<<std::endl;
+    }
     set_quic_log_level(quiche::ERROR);
     quic::ContentInit('a');
-    std::string quic_cert_path("/home/ipcom/zsy/v89/quiche/utils/data/quic-cert/");
-    ns3::set_quic_cert_key(quic_cert_path);
-    //HELLO_UNIDI
-    //HELLO_BIDI
-    //BANDWIDTH
-    quic::BackendType type=quic::BackendType::BANDWIDTH;
-    uint8_t client_log_flag=E_QC_IN_FLIGHT|E_QC_SEND_RATE;
-    uint8_t server_log_flag=E_QS_OWD|E_QS_LOST|E_QS_GOODPUT;
-    //RegisterExternalCongestionFactory();
-    test_app(Seconds(0.001),Seconds(200),client_log_flag,server_log_flag,type,cc_type);
+
+    std::string quic_cert_path=std::string(envValue)+"utils/data/quic-cert/";
+    if(ns3::set_quic_cert_key(quic_cert_path)){
+        //HELLO_UNIDI
+        //HELLO_BIDI
+        //BANDWIDTH
+        quic::BackendType type=quic::BackendType::BANDWIDTH;
+        uint8_t client_log_flag=E_QC_IN_FLIGHT|E_QC_SEND_RATE;
+        uint8_t server_log_flag=E_QS_OWD|E_QS_LOST|E_QS_GOODPUT;
+        RegisterExternalCongestionFactory();
+        test_app(Seconds(0.001),Seconds(200),client_log_flag,server_log_flag,type,cc_type);
+    }
     return 0;
 }

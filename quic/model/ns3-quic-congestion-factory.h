@@ -3,7 +3,7 @@
 namespace quic{
 enum CongestionControlType2{
     kCC0=CongestionControlType::kBBRv2,
-    kSelfDefineCC1,
+    kCopa,
 };
 void RegisterExternalCongestionFactory();
 }

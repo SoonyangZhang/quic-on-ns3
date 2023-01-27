@@ -1,5 +1,5 @@
 #! /bin/sh
-algo=cubic
+algo=copa
 id=1
 prefix1=${id}_10.1.1.1:49153_10.1.1.2:1234
 prefix2=${id}_10.1.1.1:49154_10.1.1.2:1234
