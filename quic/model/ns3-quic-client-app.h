@@ -63,15 +63,15 @@ public:
     // Called when a ConnectionId has been retired.
     void OnConnectionIdRetired(const quic::QuicConnectionId& server_connection_id) override;
     
-    typedef Callback<void,float> TraceRate;
+    typedef Callback<void,float> TraceOneFloatValue;
     typedef Callback<void,int> TraceOneIntValue;
-    void SetRateTraceFuc(TraceRate cb);
+    void SetRateTraceFuc(TraceOneFloatValue cb);
     void SetCwndTraceFun(TraceOneIntValue cb);
     void SetInFlightTraceFun(TraceOneIntValue cb);
 private:
     void InitialAndConnect();
     void RecvPacket(Ptr<Socket> socket);
-    void SendToNetwork(Ptr<Packet> p,const InetSocketAddress& dest);
+    void SendToNetwork(const char *buffer,size_t sz);
     virtual void StartApplication() override;
     virtual void StopApplication() override;
     quic::CongestionControlType m_ccType;
@@ -87,10 +87,10 @@ private:
     quic::QuicClock *m_clock=nullptr;
     bool m_running=false;
     uint64_t m_seq=1;
-    TraceRate m_traceRate;
+    TraceOneFloatValue m_traceRate;
     TraceOneIntValue m_traceCwnd;
     TraceOneIntValue m_traceInFlight;
-    quic::QuicBandwidth m_rate=quic::QuicBandwidth::Zero();
+    int64_t m_rate=0;
     int m_cwnd=0;
     int m_inFlight=0;
 };

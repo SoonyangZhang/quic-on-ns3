@@ -73,7 +73,7 @@ void QuicClientApp::RegisterFD(quic::Ns3PacketInCallback *cb){
 }
 void QuicClientApp::UnregisterFD(quic::Ns3PacketInCallback *cb){
     if(m_packetProcessor==cb){
-        cb->OnRegistration();
+        cb->OnUnregistration();
         m_packetProcessor=nullptr;
     }
     
@@ -86,9 +86,7 @@ int QuicClientApp::WritePacket(const char* buffer,
 size_t buf_len,
 const quic::QuicIpAddress& self_address,
 const quic::QuicSocketAddress& peer_address){
-    Ptr<Packet> packet=Create<Packet>((const uint8_t*)buffer,buf_len);
-    InetSocketAddress remote(m_peerIp,m_peerPort);
-    SendToNetwork(packet,remote);
+    SendToNetwork(buffer,buf_len);
     return buf_len;
 }
 
@@ -96,7 +94,7 @@ void QuicClientApp::OnConnectionClosed(quic::QuicConnectionId server_connection_
                         quic::QuicErrorCode error,
                         const std::string& error_details,
                         quic::ConnectionCloseSource source){
-                            
+    NS_LOG_ERROR("OnConnectionClosed "<<error_details);
 }
 void QuicClientApp::OnWriteBlocked(quic::QuicBlockedWriterInterface* blocked_writer){
     
@@ -115,7 +113,7 @@ void  QuicClientApp::OnNewConnectionIdSent(
 void QuicClientApp::OnConnectionIdRetired(const quic::QuicConnectionId& server_connection_id){
     
 }
-void QuicClientApp::SetRateTraceFuc(TraceRate cb){
+void QuicClientApp::SetRateTraceFuc(TraceOneFloatValue cb){
     m_traceRate=cb;
 }
 void QuicClientApp::SetCwndTraceFun(TraceOneIntValue cb){
@@ -133,13 +131,13 @@ void QuicClientApp::InitialAndConnect(){
     if (quic::get_quic_ietf_draft()) {
         quic::QuicVersionInitializeSupportForIetfDraft();
         versions = {};
-    for (const quic::ParsedQuicVersion& version : quic::AllSupportedVersions()) {
-        if (version.HasIetfQuicFrames() &&
-            version.handshake_protocol == quic::PROTOCOL_TLS1_3) {
-        versions.push_back(version);
+        for (const quic::ParsedQuicVersion& version : quic::AllSupportedVersions()) {
+            if (version.HasIetfQuicFrames() &&
+                version.handshake_protocol == quic::PROTOCOL_TLS1_3) {
+            versions.push_back(version);
+            }
         }
-    }
-    quic::QuicEnableVersion(versions[0]);
+        quic::QuicEnableVersion(versions[0]);
     
     } else if (!quic_version_string.empty()) {
         quic::ParsedQuicVersion parsed_quic_version =
@@ -159,16 +157,15 @@ void QuicClientApp::InitialAndConnect(){
     
     std::unique_ptr<quic::ProofVerifier> proof_verifier=std::make_unique<quic::FakeProofVerifier>();
     InetSocketAddress ns3_peer_sock_addr(m_peerIp,m_peerPort); 
-    InetSocketAddress ns3_self_sock_addr=GetLocalAddress();
+    InetSocketAddress ns3_self_sock_addr(m_bindIp,m_bindPort);
     quic::QuicSocketAddress quic_peer_sock_addr=GetQuicSocketAddr(ns3_peer_sock_addr);
     quic::QuicServerId server_id(quic_peer_sock_addr.host().ToString(),
                                  quic_peer_sock_addr.port());
-    quic::Ns3QuicAlarmEngine *engine=m_backend->get_engine();
     m_quicClient.reset(new quic::Ns3QuicClient(this,quic_peer_sock_addr,server_id,
-                       versions,std::move(proof_verifier),engine,m_backend.get(),this,m_ccType));
+                       versions,std::move(proof_verifier),m_engine.get(),m_backend.get(),this,m_ccType));
     
-    quic::QuicSocketAddress quic_self_sock_address=GetQuicSocketAddr(ns3_self_sock_addr);
-    m_quicClient->set_bind_to_address(quic_self_sock_address.host());
+    quic::QuicSocketAddress quic_self_sock_addr=GetQuicSocketAddr(ns3_self_sock_addr);
+    m_quicClient->set_bind_to_address(quic_self_sock_addr.host());
     m_quicClient->set_initial_max_packet_length(quic::kDefaultMaxPacketSize);
     if(!m_quicClient->Initialize()){
         NS_LOG_ERROR("failed to initial client");
@@ -177,7 +174,7 @@ void QuicClientApp::InitialAndConnect(){
     m_quicClient->AsynConnect();
 }
 void QuicClientApp::RecvPacket(Ptr<Socket> socket){
-    if(!m_running){return ;}
+    if (!m_running) {return ;}
     quic::QuicTime now=m_clock->Now();
     InetSocketAddress ns3_self_sock_addr(m_bindIp,m_bindPort);
     quic::QuicSocketAddress quic_self_sock_addr=GetQuicSocketAddr(ns3_self_sock_addr);
@@ -191,44 +188,52 @@ void QuicClientApp::RecvPacket(Ptr<Socket> socket){
     //NS_LOG_INFO(this<<" QuicClientApp::recv "<<ns3_peer_sock_addr.GetIpv4()<<" "<<length);
     Ns3QuicTag tag;
     packet->RemovePacketTag(tag);
-    uint8_t buffer[2000]={'\0'};
-    packet->CopyData(buffer,length);
-    quic::QuicReceivedPacket quic_packet((char*)buffer,(size_t)length,now);
+    char buffer[2000]={'\0'};
+    packet->CopyData((uint8_t*)buffer,length);
+    quic::QuicReceivedPacket quic_packet(buffer,(size_t)length,now);
     if(m_packetProcessor){
         m_packetProcessor->ProcessPacket(quic_self_sock_addr,quic_peer_sock_addr,quic_packet);
     }
 }
-void QuicClientApp::SendToNetwork(Ptr<Packet> p,const InetSocketAddress& dest){
+void QuicClientApp::SendToNetwork(const char *buffer,size_t sz){
     if(!m_socket) {return ;}
     Time now=Simulator::Now();
     int cwnd=0;
     int in_flight=0;
     quic::QuicBandwidth bandwidth=quic::QuicBandwidth::Zero();
-    if((!m_traceCwnd.IsNull())&&m_quicClient&&m_quicClient->GetCongestionWindowPackets(cwnd)){
-        if(m_cwnd!=cwnd){
-            m_traceCwnd(cwnd);
-            m_cwnd=cwnd;
+    if (m_quicClient) {
+        if (!m_traceCwnd.IsNull()) {
+            m_quicClient->GetCongestionWindowPackets(cwnd);
+            if (m_cwnd != cwnd) {
+                m_traceCwnd(cwnd);
+                m_cwnd=cwnd;
+            }
+        }
+        if (!m_traceInFlight.IsNull()) {
+            m_quicClient->GetInFlightPackets(in_flight);
+            if (m_inFlight !=  in_flight) {
+                m_traceInFlight(in_flight);
+                m_inFlight=in_flight;
+            }
+        }
+        if (!m_traceRate.IsNull()) {
+            m_quicClient->GetBandwidth(bandwidth);
+            int64_t bps=bandwidth.ToBitsPerSecond();
+            if (m_rate != bps) {
+                float v=1.0*bps/1000;
+                m_traceRate(v);
+                m_rate=bps;
+            }
         }
     }
-    if((!m_traceInFlight.IsNull())&&m_quicClient&&m_quicClient->GetInFlightPackets(in_flight)){
-        if(m_inFlight!=in_flight){
-            m_traceInFlight(in_flight);
-            m_inFlight=in_flight;
-        }
-    }
-    if((!m_traceRate.IsNull())&&m_quicClient&&m_quicClient->GetBandwidth(bandwidth)){
-        if(m_rate!=bandwidth){
-            float v=1.0*bandwidth.ToBitsPerSecond()/1000;
-            m_traceRate(v);
-            m_rate=bandwidth;
-        }
-    }
-    //NS_LOG_INFO(this<<" QuicClientApp::send "<<dest.GetIpv4()<<" "<<dest.GetPort()<<" "<<now.GetSeconds());
+    InetSocketAddress remote(m_peerIp,m_peerPort);
+    Ptr<Packet> packet=Create<Packet>((const uint8_t*)buffer,sz);
+    //NS_LOG_INFO(this<<" QuicClientApp::send "<<remote.GetIpv4()<<" "<<remote.GetPort()<<" "<<now.GetSeconds());
     uint64_t send_time=now.GetMilliSeconds();
     Ns3QuicTag tag(m_seq,send_time);
-    p->AddPacketTag(tag); 
+    packet->AddPacketTag(tag); 
     m_seq++;
-    m_socket->SendTo(p,0,dest);
+    m_socket->SendTo(packet,0,remote);
 }
 void QuicClientApp::StartApplication(){
     m_running=true;

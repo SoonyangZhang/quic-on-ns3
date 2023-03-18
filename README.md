@@ -1,11 +1,10 @@
 # quic-on-ns3
 running google quic on ns3  
 This repo depends on quiche library.   
-The quiche libarary can be got here: https://github.com/bilibili/quiche  
+The quiche library can be got here: https://github.com/bilibili/quiche  
 I make some minor changes on CmakeList.txt to get shared library.  
-I upload the source code of quiche library on BaiduYunPan.  
-url: https://pan.baidu.com/s/1F4LTfXn5KHR1LcNa5yXkkA   
-auth code: 2jhd   
+Down quic library on release page: https://github.com/SoonyangZhang/quic-on-ns3/releases/tag/quiche  
+  
 # Build quiche   
 ## Prerequisite  
 ```
@@ -37,15 +36,10 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$QUICHE_SRC_DIR/build/
 ```
 The reason to add QUICHE_SRC_DIR can be found quic/wscript.  
 ## build ns3  
-1 enble c++17 flag (ns3.33/wscript)
-```
-opt.add_option('--cxx-standard',  
-               help=('Compile NS-3 with the given C++ standard'),  
-               type='string', default='-std=c++17', dest='cxx_standard')  
-```
-2 cope quic folder to ns3.33/src/  
+cope quic folder to ns3.33/src/  
 ```
 cd ns3.33  
+CXXFLAGS="-std=c++17"  
 source /etc/profile  
 ./waf configure  
 ./waf build  
