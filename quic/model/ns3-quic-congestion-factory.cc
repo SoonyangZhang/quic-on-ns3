@@ -2,10 +2,11 @@
 #include "gquiche/quic/core/congestion_control/bbr_sender.h"
 #include "gquiche/quic/core/congestion_control/tcp_cubic_sender_bytes.h"
 
-#include "ns3-quic-congestion-factory.h"
+#include "ns3/ns3-quic-congestion-factory.h"
 #include "ns3-quic-no-destructor.h"
 #include "cc-algo/copa_sender.h"
 #include "cc-algo/vegas_sender.h"
+#include "ns3-quic-private.h"
 namespace quic{
 class Ns3QuicCongestionFactory:public AbstractCongestionFactory{
 public:

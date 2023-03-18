@@ -31,7 +31,7 @@ Ns3QuicClientTrace::~Ns3QuicClientTrace(){
     Close();
 }
 
-void Ns3QuicClientTrace::LogEnable(const std::string &prefix,uint8_t e){
+void Ns3QuicClientTrace::LogEnable(const std::string &prefix,QuicClientTraceType e){
     char buf[FILENAME_MAX];
     memset(buf,0,FILENAME_MAX);
     std::string name;
@@ -93,7 +93,7 @@ void Ns3QuicClientTrace::Close(){
     }
 }
 
-Ns3QuicServerTrace::Ns3QuicServerTrace(std::string &prefix,uint8_t e){
+Ns3QuicServerTrace::Ns3QuicServerTrace(std::string &prefix,QuicServerTraceType e){
     char buf[FILENAME_MAX];
     memset(buf,0,FILENAME_MAX);
     std::string name;
@@ -197,9 +197,7 @@ void Ns3QuicServerTrace::Close(){
         m_goodput.close();
     }
 }
-Ns3QuicServerTraceDispatcher::Ns3QuicServerTraceDispatcher(DataRate rate,Time start_time):
-m_bottleneckRate(rate),
-m_startTime(start_time){}
+Ns3QuicServerTraceDispatcher::Ns3QuicServerTraceDispatcher(){}
 Ns3QuicServerTraceDispatcher::~Ns3QuicServerTraceDispatcher(){
     Shutdown();
 }
@@ -210,18 +208,13 @@ void Ns3QuicServerTraceDispatcher::Shutdown(){
         m_traceDb.erase(it);
         delete trace;
     }
-    if(m_util.is_open()){
-        Time duration=m_receiptTime-m_startTime;
-        int64_t channel_bit=m_bottleneckRate.GetBitRate()*duration.GetMilliSeconds()/1000;
-        float util=1.0*m_readBytes*8*100/(channel_bit);
-        m_util<<util<<std::endl;
-        m_util.close();
-    }
 }
-void Ns3QuicServerTraceDispatcher::LogEnable(std::string &topo_id,uint8_t e){
+void Ns3QuicServerTraceDispatcher::LogEnable(std::string &topo_id,QuicServerTraceType e){
     m_topoId=topo_id;
     m_e=e;
-    OpenUtilFile(topo_id);
+    if(E_QS_UTIL&&e){
+        OpenUtilFile(topo_id);
+    }
 }
 bool Ns3QuicServerTraceDispatcher::AddMonitorAddressPair(const Ns3QuicAddressPair &addr_pair){
     bool success=false;
@@ -247,6 +240,14 @@ void Ns3QuicServerTraceDispatcher::OnOwd(const InetSocketAddress &c,const InetSo
         it->second->OnOwd(seq,owd,len);
     }
 }
+
+void Ns3QuicServerTraceDispatcher::CalculateUtil(int64_t channel_bit){
+    if (f_util.is_open() && channel_bit > 0) {
+        float util=1.0*m_readBytes*8*100/(channel_bit);
+        f_util<<util<<std::endl;
+        f_util.close();
+    }
+}
 void Ns3QuicServerTraceDispatcher::OpenUtilFile(const std::string& topo_id){
     char buf[FILENAME_MAX];
     memset(buf,0,FILENAME_MAX);
@@ -257,7 +258,7 @@ void Ns3QuicServerTraceDispatcher::OpenUtilFile(const std::string& topo_id){
     }else{
         name=std::string(Ns3QuicTracePath)+topo_id+"_util.txt";
     }
-    m_util.open(name.c_str(), std::fstream::out);
+    f_util.open(name.c_str(), std::fstream::out);
 }
 
 }

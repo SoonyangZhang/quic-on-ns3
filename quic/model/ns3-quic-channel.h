@@ -2,9 +2,9 @@
 #include <memory>
 #include "gquiche/quic/core/quic_alarm.h"
 #include "gquiche/quic/core/quic_alarm_factory.h"
-#include "ns3/ns3-transport-stream.h"
+#include "ns3-transport-stream.h"
+#include "ns3/ns3-quic-public.h"
 namespace quic{
-void ContentInit(const char v);
 class Ns3QuicAlarmEngine;
 class Ns3QuicChannelBase:public Ns3TransportStream::Visitor{
 public:

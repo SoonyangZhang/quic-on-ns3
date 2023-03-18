@@ -3,7 +3,7 @@ running google quic on ns3
 This repo depends on quiche library.   
 The quiche library can be got here: https://github.com/bilibili/quiche  
 I make some minor changes on CmakeList.txt to get shared library.  
-Down quic library on release page: https://github.com/SoonyangZhang/quic-on-ns3/releases/tag/quiche  
+Download quiche library on release page: https://github.com/SoonyangZhang/quic-on-ns3/releases/tag/quiche  
   
 # Build quiche   
 ## Prerequisite  

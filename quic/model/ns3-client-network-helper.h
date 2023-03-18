@@ -3,7 +3,7 @@
 #include "gquiche/quic/platform/api/quic_socket_address.h"
 #include "gquiche/quic/tools/quic_client_base.h"
 #include "gquiche/quic/core/quic_packet_writer.h"
-#include "ns3/ns3-quic-poll-server.h"
+#include "ns3-quic-poll-server.h"
 namespace quic{
 class Ns3QuicPollServer;
 class Ns3ClientNetworkHelper:public QuicClientBase::NetworkHelper,public Ns3PacketInCallback{

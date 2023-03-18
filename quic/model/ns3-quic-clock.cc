@@ -1,7 +1,7 @@
 #include <utility>
 
 #include "ns3/simulator.h"
-#include "ns3/ns3-quic-clock.h"
+#include "ns3-quic-clock.h"
 namespace quic{
 template <typename T, typename O = std::nullptr_t>
 class NoDestructor {

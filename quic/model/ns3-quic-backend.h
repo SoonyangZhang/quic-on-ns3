@@ -1,16 +1,12 @@
 #pragma once
 #include <memory>
-#include "ns3/ns3-quic-channel.h"
+#include "ns3/ns3-quic-public.h"
+#include "ns3-quic-channel.h"
 namespace quic{
 class Ns3TransportStream;
 class Ns3QuicSessionBase;
 class Ns3QuicAlarmEngine;
 class Ns3QuicBackendBase;
-enum class BackendType{
-HELLO_UNIDI,
-HELLO_BIDI,
-BANDWIDTH
-};
 class Ns3QuicEndpointBase{
 public:
     Ns3QuicEndpointBase(Ns3QuicBackendBase* backend);

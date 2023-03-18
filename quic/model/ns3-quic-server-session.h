@@ -9,7 +9,7 @@
 #include "gquiche/quic/core/quic_session.h"
 #include "gquiche/quic/quic_transport/quic_transport_protocol.h"
 
-#include "ns3/ns3-quic-session-base.h"
+#include "ns3-quic-session-base.h"
 namespace quic{
 class Ns3QuicBackendBase;
 class Ns3QuicEndpointBase;

@@ -7,7 +7,8 @@
 #include "gquiche/quic/platform/api/quic_flags.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "gquiche/quic/platform/api/quic_logging.h"
-#include "ns3-quic-util.h"
+#include "ns3-quic-addr-convert.h"
+#include "ns3/ns3-quic-util.h"
 namespace ns3{
 namespace{
     static bool quic_log_level_setted=false;
@@ -34,6 +35,7 @@ static bool IsDirExist(const std::string& path)
     return (info.st_mode & S_IFDIR) != 0;
 #endif
 }
+
 bool MakePath(const std::string& path)
 {
 #if defined(_WIN32)
@@ -74,6 +76,7 @@ bool MakePath(const std::string& path)
         return false;
     }
 }
+
 void GetFiles(std::string &cate_dir,std::vector<std::string> &files)
 {
     DIR *dir;
@@ -100,14 +103,17 @@ void GetFiles(std::string &cate_dir,std::vector<std::string> &files)
     }
     closedir(dir);
 }
+
 static inline int64_t WallTimeNowInUsec(){
     std::chrono::system_clock::duration d = std::chrono::system_clock::now().time_since_epoch();    
     std::chrono::microseconds mic = std::chrono::duration_cast<std::chrono::microseconds>(d);
     return mic.count(); 
 }
+
 int WallTimeMillis(){
     return WallTimeNowInUsec()/1000;
 }
+
 quic::QuicSocketAddress GetQuicSocketAddr(const InetSocketAddress &addr){
     Ipv4Address ns3_ip_addr=addr.GetIpv4();
     uint16_t port=addr.GetPort();
@@ -118,6 +124,7 @@ quic::QuicSocketAddress GetQuicSocketAddr(const InetSocketAddress &addr){
     quic::QuicIpAddress quic_ip_addr(addr_in);
     return quic::QuicSocketAddress(quic_ip_addr,port);
 }
+
 InetSocketAddress GetNs3SocketAddr(const quic::QuicSocketAddress &addr){
     quic::QuicIpAddress quic_ip_addr=addr.host();
     uint16_t port=addr.port();
@@ -128,6 +135,7 @@ InetSocketAddress GetNs3SocketAddr(const quic::QuicSocketAddress &addr){
     Ipv4Address ns3_ip_addr(ip_host_order);
     return InetSocketAddress{ns3_ip_addr,port};
 }
+
 void set_quic_log_level(quiche::QuicLogLevel level){
     if(!quic_log_level_setted){
         auto sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
@@ -136,6 +144,11 @@ void set_quic_log_level(quiche::QuicLogLevel level){
         quic_log_level_setted=true;
     }
 }
+
+void set_quic_log_error_level(){
+    set_quic_log_level(quiche::ERROR);
+}
+
 bool set_quic_key_value(const std::string &key,const std::string &value){
     bool success=false;
     auto flag_ptr = quiche::FlagRegistry::GetInstance().FindFlag(key);
@@ -145,6 +158,7 @@ bool set_quic_key_value(const std::string &key,const std::string &value){
     }
     return success;
 }
+
 bool set_quic_cert_key(const std::string& quic_cert_path){
     std::string certificate_file("certificate_file");
     std::string certificate_file_path=quic_cert_path+std::string("leaf_cert.pem");
@@ -166,6 +180,7 @@ std::string GetNs3Ipv4Address2String(const Ipv4Address& ip){
     uint32_t ip_host_order=ip.Get();
     return GetIp2String(ip_host_order);
 }
+
 std::string GetIp2String(uint32_t ip_host_order){
     uint8_t buffer[4];
     buffer[0] = (ip_host_order>> 24) & 0xff;
@@ -179,6 +194,7 @@ std::string GetIp2String(uint32_t ip_host_order){
         std::to_string((int)buffer[3]);
     return ret;
 }
+
 std::string Ns3QuicAddressPair2String(const Ns3QuicAddressPair& addr_pair){
     std::string ret;
     std::string client_ip=GetIp2String(addr_pair.client_ip);

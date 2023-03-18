@@ -55,22 +55,13 @@ def build(bld):
     headers = bld(features='ns3header')
     headers.module = 'quic'
     headers.source = [
-    'model/ns3-client-network-helper.h',
-    'model/ns3-packet-writer.h',
-    'model/ns3-quic-alarm-engine.h',
-    'model/ns3-quic-backend.h',
-    'model/ns3-quic-channel.h',
-    'model/ns3-quic-clock.h',
-    'model/ns3-quic-congestion-factory.h',
-    'model/ns3-quic-client.h',
     'model/ns3-quic-client-app.h',
-    'model/ns3-quic-server.h',
+    'model/ns3-quic-congestion-factory.h',
     'model/ns3-quic-server-app.h',
-    'model/ns3-quic-session-base.h',
-    'model/ns3-quic-poll-server.h',
     'model/ns3-quic-trace.h',
+    'model/ns3-quic-public.h',
+    'model/ns3-quic-addr-pair.h',
     'model/ns3-quic-util.h',
-    'model/ns3-transport-stream.h',
     'model/quic-test.h',
     ]
     module.env['INCLUDES'] += [

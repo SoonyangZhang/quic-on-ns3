@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 #include "absl/strings/string_view.h"
-#include "ns3/ns3-transport-stream.h"
+#include "ns3-transport-stream.h"
 #include "gquiche/quic/core/quic_session.h"
 namespace quic{
 class Ns3QuicSessionBase:public QuicSession{

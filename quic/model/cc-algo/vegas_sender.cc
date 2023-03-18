@@ -1,5 +1,5 @@
 #include "vegas_sender.h"
-#include "../ns3-quic-congestion-factory.h"
+#include "../ns3-quic-private.h"
 #include <limits>
 #include <stdexcept>
 #include <sstream>
