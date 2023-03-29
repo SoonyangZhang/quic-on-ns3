@@ -61,8 +61,8 @@ data can be found under folder ("/home/xxx/traces/")
 copy the file plot-script/data_plot.sh to "/home/xxx/traces/bbr"  
 plot the results:  
 ```
-chmod 777  data-plot.sh  
-./data-plot.sh  
+chmod 777  data-plot.sh    
+./data-plot.sh  bbr 1  
 ```
 ## bbr  
 inflight packets:  

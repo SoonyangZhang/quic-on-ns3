@@ -1,6 +1,6 @@
 #! /bin/sh
-algo=copa
-id=1
+algo=$1
+id=$2
 prefix1=${id}_10.1.1.1:49153_10.1.1.2:1234
 prefix2=${id}_10.1.1.1:49154_10.1.1.2:1234
 prefix3=${id}_10.1.1.1:49155_10.1.1.2:1234
@@ -12,7 +12,7 @@ gnuplot<<!
 set xlabel "time/s" 
 set ylabel "rate/kbps"
 set xrange [0:200]
-set yrange [0:4000]
+set yrange [0:5000]
 set term "png"
 set output "${output}-send-rate.png"
 plot "${file1}" u 1:2 title "flow1" with lines lw 2 lc 1,\
@@ -29,7 +29,7 @@ gnuplot<<!
 set xlabel "time/s" 
 set ylabel "rate/kbps"
 set xrange [0:200]
-set yrange [0:4000]
+set yrange [0:5000]
 set term "png"
 set output "${output}-goodput.png"
 plot "${file1}" u 1:2 title "flow1" with lines lw 2 lc 1,\
